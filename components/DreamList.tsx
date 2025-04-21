@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   },
   container: {
     width: "80%",
-    height: "40%",
+    height: "80%",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
   scrollContainer: {
     padding: 20,
     backgroundColor: "#f5f5f5",
-    height: "70%",
+    height: "90%",
     display: "flex",
   },
   emptyText: {
