@@ -10,7 +10,6 @@ C’est mon **premier projet mobile**, pensé pour aider à suivre et comprendre
 ## ✨ Fonctionnalités
 
 - 📝 Enregistrement de rêves (texte, date, intensité…)
-- 📅 Consultation dans un calendrier
 - 📊 Statistiques (graphiques) sur les rêves
 - 💾 Sauvegarde locale via AsyncStorage
 
