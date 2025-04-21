@@ -63,6 +63,10 @@ export default function DreamForm() {
     }
   };
 
+  // On pourrait ici mettre une fonction comme findhashtagidbylabel mais pour les personnes 
+  // si on veut gérer un jour la recherche par personne dans un rêve mais on se contente 
+  // pour l'instant le stocker les personnes avec les hashtags
+
   const onChangeHour = (newHour: any) => {
     if (newHour) {
       const newHourHours = newHour.getHours();
@@ -87,26 +91,40 @@ export default function DreamForm() {
     setPeopleList(newPeople);
   };
 
+  const removeHashtag = (indexToRemove) => {
+    const newHashtags = hashtags.filter((_, i) => i !== indexToRemove);
+    setHashtags(newHashtags);
+    setInputCountHashtags(newHashtags.length);
+  };
+
+  const removePerson = (indexToRemove) => {
+    const newPeopleList = peopleList.filter((_, i) => i !== indexToRemove);
+    setPeopleList(newPeopleList);
+    setInputCountPeople(newPeopleList.length);
+  };
+
+
   const handleDreamSubmission = async () => {
     try {
       const existingData = await AsyncStorage.getItem("dreamFormDataArray");
       const formDataArray = existingData ? JSON.parse(existingData) : [];
 
-      let formattedHashtags;
-      formattedHashtags = await Promise.all(
-        hashtags.map(async (label) => ({
+      const filteredHashtags = hashtags.filter((label) => label.trim() !== "");
+      const formattedHashtags = await Promise.all(
+        filteredHashtags.map(async (label) => ({
           id: await findHashtagIdByLabel(label),
           label: label,
         }))
       );
 
-      let formattedPeopleList;
-      formattedPeopleList = await Promise.all(
-        hashtags.map(async (label) => ({
-          id: await findHashtagIdByLabel(label),
+      const filteredPeopleList = peopleList.filter((label) => label.trim() !== "");
+      const formattedPeopleList = await Promise.all(
+        filteredPeopleList.map(async (label) => ({
+          id: await findHashtagIdByLabel(label), 
           label: label,
         }))
       );
+
 
       formDataArray.push({
         id: Math.random().toString(36).substr(2, 9), // Générer un ID unique
@@ -132,6 +150,7 @@ export default function DreamForm() {
         JSON.stringify(formDataArray)
       );
 
+
       // Réinitialiser les champs du formulaire
       setDreamText("");
       setDate("");
@@ -153,6 +172,7 @@ export default function DreamForm() {
       console.error("Erreur lors de la sauvegarde des données:", error);
     }
   };
+
 
   return (
     <View style={styles.container}>
@@ -222,24 +242,41 @@ export default function DreamForm() {
             mode="contained"
             onPress={() => {
               setInputCountHashtags(inputCountHashtags + 1);
-              setHashtags([...hashtags, ""]); 
+              setHashtags([...hashtags, ""]);
             }}
             style={styles.addButton}
           >
             + Ajouter un hashtag
           </Button>
           {[...Array(inputCountHashtags)].map((_, index) => (
-            <TextInput
+            <View
               key={index}
-              label={`Hashtag ${index + 1}`}
-              value={hashtags[index]}
-              onChangeText={(text) => updateHashtag(index, text)}
-              mode="outlined"
-              style={[
-                styles.input,
-                { width: width * 0.8, alignSelf: "center" },
-              ]}
-            />
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 10,
+              }}
+            >
+              <TextInput
+                label={`Hashtag ${index + 1}`}
+                value={hashtags[index]}
+                onChangeText={(text) => updateHashtag(index, text)}
+                mode="outlined"
+                style={{
+                  width: width * 0.7,
+                  marginRight: 8,
+                }}
+              />
+              <Button
+                mode="text"
+                onPress={() => removeHashtag(index)}
+                compact
+                textColor="red"
+              >
+                ❌
+              </Button>
+            </View>
           ))}
 
           <TextInput
@@ -254,24 +291,41 @@ export default function DreamForm() {
             mode="contained"
             onPress={() => {
               setInputCountPeople(inputCountPeople + 1);
-              setPeopleList([...peopleList, ""]); 
+              setPeopleList([...peopleList, ""]);
             }}
             style={styles.addButton}
           >
             + Ajouter une personne
           </Button>
           {[...Array(inputCountPeople)].map((_, index) => (
-            <TextInput
+            <View
               key={index}
-              label={`Personne ${index + 1}`}
-              value={peopleList[index]}
-              onChangeText={(text) => updatePeople(index, text)}
-              mode="outlined"
-              style={[
-                styles.input,
-                { width: width * 0.8, alignSelf: "center" },
-              ]}
-            />
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 10,
+              }}
+            >
+              <TextInput
+                label={`Personne ${index + 1}`}
+                value={peopleList[index]}
+                onChangeText={(text) => updatePeople(index, text)}
+                mode="outlined"
+                style={{
+                  width: width * 0.7,
+                  marginRight: 8,
+                }}
+              />
+              <Button
+                mode="text"
+                onPress={() => removePerson(index)}
+                compact
+                textColor="red"
+              >
+                ❌
+              </Button>
+            </View>
           ))}
 
           <TextInput
@@ -402,11 +456,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   spacing: {
-    height: 16, 
+    height: 16,
     backgroundColor: "#f5f5f5",
   },
   accordion: {
-    backgroundColor: "#e0e0e0 !important", 
+    backgroundColor: "#e0e0e0 !important",
     borderRadius: 8,
     marginVertical: 8,
     elevation: 2,
