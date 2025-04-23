@@ -4,18 +4,22 @@ import { View, Text, ScrollView, useWindowDimensions, StyleSheet } from "react-n
 import { LineChart } from "react-native-chart-kit";
 
 const chartConfig = {
-  backgroundColor: "#fff",
-  backgroundGradientFrom: "#fff",
-  backgroundGradientTo: "#fff",
+  backgroundColor: "#121212",
+  backgroundGradientFrom: "#1c1c1e",
+  backgroundGradientTo: "#1c1c1e",
   decimalPlaces: 1,
-  color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
-  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+  color: (opacity = 1) => `rgba(100, 210, 255, ${opacity})`, // lignes du graphique
+  labelColor: (opacity = 1) => `rgba(220, 220, 220, ${opacity})`, // labels axes
   propsForDots: {
     r: "4",
     strokeWidth: "2",
-    stroke: "#1E90FF",
+    stroke: "#64d2ff",
+  },
+  propsForBackgroundLines: {
+    stroke: "#333",
   },
 };
+
 
 
 const DreamStats = () => {
@@ -53,8 +57,8 @@ const DreamStats = () => {
   const chartWidth = Math.max(screenWidth, dreams.length * 15);
 
   return (
-    <View style={{ padding: 16, flex: 1 }}>
-      <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 12 }}>
+    <View style={ styles.view }>
+      <Text style={ styles.title }>
         Statistiques des Rêves 📊
       </Text>
 
@@ -114,19 +118,32 @@ const DreamStats = () => {
 };
 
 const styles = StyleSheet.create({
+  view: {
+    flex: 1,
+    backgroundColor: "#121212",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 40,
+  },
   container: {
-    width: "80%",
-    height: "80%",
+    width: "90%",
+    height: "85%",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
   },
   scrollContainer: {
     padding: 20,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#121212",
     height: "90%",
     display: "flex",
-    overflowX: "scroll"
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#f0f0f0",
+    marginBottom: 20,
+    textAlign: "center",
   },
 });
 

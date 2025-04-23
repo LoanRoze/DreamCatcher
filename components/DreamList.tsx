@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, FlatList, ScrollView } from "react-native";
+import { View, Text, StyleSheet, FlatList, ScrollView, Dimensions } from "react-native";
 import { TextInput, Button } from "react-native-paper";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "expo-router";
 import { useCallback } from "react";
+
+const { width } = Dimensions.get("window");
+
 
 export default function DreamList() {
   const [dreams, setDreams] = useState([]);
@@ -111,6 +114,7 @@ export default function DreamList() {
         value={searchText}
         onChangeText={setSearchText}
         mode="outlined"
+        style={[styles.input, { width: width * 0.8, alignSelf: "center" }]}
       />
 
       <Text style={styles.title}>Liste des Rêves :</Text>
@@ -177,9 +181,10 @@ const styles = StyleSheet.create({
   dreamText: {
     fontSize: 16,
     marginBottom: 4,
+    color: "#f2f2f2", // Texte clair
   },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: "#1f1f1f", // Fond sombre de la carte
     padding: 20,
     borderRadius: 15,
     shadowColor: "#000",
@@ -193,11 +198,11 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 5,
-    color: "#333",
+    color: "#e0e0e0", // Texte clair
   },
   text: {
     fontSize: 16,
-    color: "#444",
+    color: "#ccc", // Gris clair pour le texte
     marginBottom: 10,
   },
   row: {
@@ -207,15 +212,15 @@ const styles = StyleSheet.create({
   },
   label: {
     fontWeight: "bold",
-    color: "#555",
+    color: "#f2f2f2", // Texte clair pour le label
     marginRight: 5,
   },
   value: {
-    color: "#222",
+    color: "#e0e0e0", // Texte clair pour la valeur
   },
   tag: {
-    backgroundColor: "#ddd",
-    color: "#333",
+    backgroundColor: "#333", // Fond sombre pour les tags
+    color: "#fff", // Texte clair dans les tags
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 15,
@@ -223,8 +228,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   peopleTag: {
-    backgroundColor: "#87CEFA",
-    color: "#fff",
+    backgroundColor: "#4a90e2", // Bleu clair pour les tags de personnes
+    color: "#fff", // Texte blanc dans les tags
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 15,
@@ -233,7 +238,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     fontSize: 12,
-    color: "#888",
+    color: "#888", // Gris clair pour le texte du footer
     marginTop: 10,
     textAlign: "right",
   },
@@ -243,10 +248,11 @@ const styles = StyleSheet.create({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#121212", // Fond sombre pour le container
   },
   scrollContainer: {
     padding: 20,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#1a1a1a", // Fond sombre de la zone de scroll
     height: "90%",
     display: "flex",
   },
@@ -254,7 +260,16 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 20,
     fontSize: 16,
-    color: "#999",
+    color: "#bbb", // Gris clair pour le texte vide
     fontStyle: "italic",
+  },
+  input: {
+    marginBottom: 16,
+    backgroundColor: "#333", // Fond sombre de l'input
+    color: "#f0f0f0", // Texte clair dans l'input
+    borderRadius: 8,
+    paddingLeft: 10, // Ajout d'un peu de padding à gauche pour les inputs
+    borderColor: "#444", // Légère bordure sombre
+    borderWidth: 1, // Bordure fine
   },
 });
