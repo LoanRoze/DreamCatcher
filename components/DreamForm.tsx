@@ -1,9 +1,15 @@
 import React, { useState } from "react";
-import { StyleSheet, Dimensions, ScrollView } from "react-native";
+import {
+  StyleSheet,
+  Dimensions,
+  ScrollView,
+  Platform,
+  TouchableOpacity,
+} from "react-native";
 import { View, Text } from "./Themed";
-import { TextInput, Button, Checkbox, List } from "react-native-paper";
-import { Calendar, CalendarList, Agenda } from "react-native-calendars";
-import RNDateTimePicker from "react-datetime-picker";
+import { TextInput, Button, List } from "react-native-paper";
+import { Calendar } from "react-native-calendars";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import "react-datetime-picker/dist/DateTimePicker.css";
 import "react-calendar/dist/Calendar.css";
@@ -11,7 +17,6 @@ import "react-clock/dist/Clock.css";
 import Slider from "@react-native-community/slider";
 
 const { width } = Dimensions.get("window");
-
 const todayDate = new Date();
 const month = todayDate.getMonth() + 1;
 const year = todayDate.getFullYear();
@@ -23,8 +28,8 @@ export default function DreamForm() {
   const [date, setDate] = useState("");
   const [hashtags, setHashtags] = useState<string[]>([]);
   const [inputCountHashtags, setInputCountHashtags] = useState(0);
-  const [hour, setHour] = useState("");
-  const [hourDateType, setHourDateType] = useState("");
+  const [hour, setHour] = useState(new Date());
+  const [showPicker, setShowPicker] = useState(false);
   const [dreamType, setDreamType] = useState("");
   const [emotionalState, setEmotionalState] = useState("");
   const [peopleList, setPeopleList] = useState<string[]>([]);
@@ -39,6 +44,13 @@ export default function DreamForm() {
 
   const toggleExpand = (key: any) => {
     setExpanded((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handleTimeChange = (event, selectedDate) => {
+    if (selectedDate) {
+      setHour(selectedDate);
+    }
+    setShowPicker(false);
   };
 
   const findHashtagIdByLabel = async (hashtag: any) => {
@@ -63,22 +75,9 @@ export default function DreamForm() {
     }
   };
 
-  // On pourrait ici mettre une fonction comme findhashtagidbylabel mais pour les personnes 
-  // si on veut gérer un jour la recherche par personne dans un rêve mais on se contente 
+  // On pourrait ici mettre une fonction comme findhashtagidbylabel mais pour les personnes
+  // si on veut gérer un jour la recherche par personne dans un rêve mais on se contente
   // pour l'instant le stocker les personnes avec les hashtags
-
-  const onChangeHour = (newHour: any) => {
-    if (newHour) {
-      const newHourHours = newHour.getHours();
-      const newHourMinutes = newHour.getMinutes();
-      const formattedTime = `${newHourHours
-        .toString()
-        .padStart(2, "0")}:${newHourMinutes.toString().padStart(2, "0")}`;
-      const selectedHour = formattedTime || hour;
-      setHour(selectedHour);
-      setHourDateType(newHour);
-    }
-  };
 
   const updateHashtag = (index: number, value: string) => {
     const newHashtags = [...hashtags];
@@ -103,7 +102,6 @@ export default function DreamForm() {
     setInputCountPeople(newPeopleList.length);
   };
 
-
   const handleDreamSubmission = async () => {
     try {
       const existingData = await AsyncStorage.getItem("dreamFormDataArray");
@@ -117,21 +115,25 @@ export default function DreamForm() {
         }))
       );
 
-      const filteredPeopleList = peopleList.filter((label) => label.trim() !== "");
+      const filteredPeopleList = peopleList.filter(
+        (label) => label.trim() !== ""
+      );
       const formattedPeopleList = await Promise.all(
         filteredPeopleList.map(async (label) => ({
-          id: await findHashtagIdByLabel(label), 
+          id: await findHashtagIdByLabel(label),
           label: label,
         }))
       );
-
 
       formDataArray.push({
         id: Math.random().toString(36).substr(2, 9), // Générer un ID unique
         dreamText: dreamText,
         date: date,
         hashtags: formattedHashtags,
-        hour: hour,
+        hour: hour.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
         dreamType: dreamType,
         emotionalState: emotionalState,
         peopleList: formattedPeopleList,
@@ -142,21 +144,17 @@ export default function DreamForm() {
         dreamSignification: dreamSignification,
         dreamMood: dreamMood,
       });
-      console.log(formDataArray);
 
-      // Sauvegarder le tableau mis à jour dans AsyncStorage
       await AsyncStorage.setItem(
         "dreamFormDataArray",
         JSON.stringify(formDataArray)
       );
 
-
-      // Réinitialiser les champs du formulaire
       setDreamText("");
       setDate("");
       setHashtags([]);
       setInputCountHashtags(0);
-      setHour("");
+      setHour(new Date());
       setDreamType("");
       setEmotionalState("");
       setPeopleList([]);
@@ -173,12 +171,12 @@ export default function DreamForm() {
     }
   };
 
-
   return (
     <View style={styles.container}>
       <ScrollView>
         {/*Champs Obligatoires*/}
 
+        {/*Reve*/}
         <TextInput
           label="Rêve"
           value={dreamText}
@@ -189,6 +187,7 @@ export default function DreamForm() {
           style={[styles.input, { width: width * 0.8, alignSelf: "center" }]}
         />
 
+        {/*Date*/}
         <Calendar
           style={styles.calendar}
           current={formattedDate}
@@ -206,17 +205,31 @@ export default function DreamForm() {
 
         <View style={styles.spacing} />
 
-        <View style={styles.datetimePickerContainer}>
-          <RNDateTimePicker
-            value={hourDateType}
-            onChange={onChangeHour}
-            disableClock={true}
-            format="HH:mm"
-            clearIcon={null}
-            calendarIcon={null}
+        {/*Heure*/}
+        <TouchableOpacity
+          style={{ padding: 10, backgroundColor: "#000", borderRadius: 5 }}
+          onPress={() => setShowPicker(true)}
+        >
+          <Text>
+            Sélectionner l'heure :{" "}
+            {hour
+              ? hour.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "--:--"}
+          </Text>
+        </TouchableOpacity>
+        {showPicker && Platform.OS !== "web" && (
+          <DateTimePicker
+            value={hour}
+            mode="time"
+            display="spinner"
+            onChange={handleTimeChange}
           />
-        </View>
+        )}
 
+        {/*Type*/}
         <TextInput
           label="Type du rêve"
           value={dreamType}
@@ -238,34 +251,32 @@ export default function DreamForm() {
             />
           )}
         >
+          {/*Hashtags*/}
           <Button
             mode="contained"
             onPress={() => {
               setInputCountHashtags(inputCountHashtags + 1);
               setHashtags([...hashtags, ""]);
             }}
+            textColor="#fff"
             style={styles.addButton}
           >
             + Ajouter un hashtag
           </Button>
           {[...Array(inputCountHashtags)].map((_, index) => (
-            <View
-              key={index}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 10,
-              }}
-            >
+            <View key={index} style={styles.inputListContainer}>
               <TextInput
                 label={`Hashtag ${index + 1}`}
                 value={hashtags[index]}
                 onChangeText={(text) => updateHashtag(index, text)}
                 mode="outlined"
-                style={{
-                  width: width * 0.7,
-                  marginRight: 8,
+                style={styles.inputList}
+                theme={{
+                  colors: {
+                    primary: "#9e9e9e",
+                    text: "#f5f5f5",
+                    placeholder: "#888",
+                  },
                 }}
               />
               <Button
@@ -279,42 +290,32 @@ export default function DreamForm() {
             </View>
           ))}
 
-          <TextInput
-            label="Etat Emotional"
-            value={emotionalState}
-            onChangeText={(text) => setEmotionalState(text)}
-            mode="outlined"
-            style={[styles.input, { width: width * 0.8, alignSelf: "center" }]}
-          />
-
+          {/*Personnes*/}
           <Button
             mode="contained"
             onPress={() => {
               setInputCountPeople(inputCountPeople + 1);
               setPeopleList([...peopleList, ""]);
             }}
+            textColor="#fff"
             style={styles.addButton}
           >
             + Ajouter une personne
           </Button>
           {[...Array(inputCountPeople)].map((_, index) => (
-            <View
-              key={index}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 10,
-              }}
-            >
+            <View key={index} style={styles.inputListContainer}>
               <TextInput
                 label={`Personne ${index + 1}`}
                 value={peopleList[index]}
                 onChangeText={(text) => updatePeople(index, text)}
                 mode="outlined"
-                style={{
-                  width: width * 0.7,
-                  marginRight: 8,
+                style={styles.inputList}
+                theme={{
+                  colors: {
+                    primary: "#9e9e9e",
+                    text: "#f5f5f5",
+                    placeholder: "#888",
+                  },
                 }}
               />
               <Button
@@ -328,6 +329,16 @@ export default function DreamForm() {
             </View>
           ))}
 
+          {/*Etat emotionnel*/}
+          <TextInput
+            label="Etat Emotionnel"
+            value={emotionalState}
+            onChangeText={(text) => setEmotionalState(text)}
+            mode="outlined"
+            style={[styles.input, { width: width * 0.8, alignSelf: "center" }]}
+          />
+
+          {/*Lieu*/}
           <TextInput
             label="Lieu du Rêve"
             value={dreamLocation}
@@ -336,6 +347,7 @@ export default function DreamForm() {
             style={[styles.input, { width: width * 0.8, alignSelf: "center" }]}
           />
 
+          {/*Intensité émotionnelle*/}
           <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>
             Intensité émotionelle du rêve :
           </Text>
@@ -349,6 +361,7 @@ export default function DreamForm() {
             onValueChange={(number) => setEmotionalIntensity(number)}
           />
 
+          {/*Clareté*/}
           <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>
             Clareté du rêve :
           </Text>
@@ -362,6 +375,7 @@ export default function DreamForm() {
             onValueChange={(number) => setDreamClarity(number)}
           />
 
+          {/*Qualité*/}
           <Text style={{ fontSize: 18, fontWeight: "bold", marginBottom: 10 }}>
             Qualité du sommeil :
           </Text>
@@ -375,6 +389,7 @@ export default function DreamForm() {
             onValueChange={(number) => setSleepQuality(number)}
           />
 
+          {/*Signification*/}
           <TextInput
             label="Signification du rêve"
             value={dreamSignification}
@@ -383,6 +398,7 @@ export default function DreamForm() {
             style={[styles.input, { width: width * 0.8, alignSelf: "center" }]}
           />
 
+          {/*Tonalité*/}
           <TextInput
             label="Tonalité du rêve"
             value={dreamMood}
@@ -397,8 +413,9 @@ export default function DreamForm() {
         mode="contained"
         onPress={handleDreamSubmission}
         style={styles.button}
+        textColor="#fff"
         disabled={
-          !dreamText.trim() || !date.trim() || !hour.trim() || !dreamType.trim()
+          !dreamText.trim() || !date.trim() || !hour || !dreamType.trim()
         }
       >
         Soumettre
@@ -409,23 +426,24 @@ export default function DreamForm() {
 
 const styles = StyleSheet.create({
   container: {
-    display: "flex",
+    flex: 1,
     padding: 16,
-    backgroundColor: "#f5f5f5",
-    width: "90%",
-    height: "80%",
+    backgroundColor: "#0d0d0d",
   },
   input: {
     marginBottom: 16,
-    backgroundColor: "white",
-    paddingLeft: 0,
+    backgroundColor: "#1a1a1a",
+    color: "#f0f0f0",
+    borderRadius: 8,
   },
   calendar: {
     borderWidth: 1,
-    borderColor: "gray",
+    borderColor: "#2e2e2e",
     height: 350,
-    width: 200,
+    width: 320,
     alignSelf: "center",
+    backgroundColor: "#1a1a1a",
+    borderRadius: 12,
   },
   datetimePickerContainer: {
     alignSelf: "center",
@@ -433,12 +451,13 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: "600",
     marginBottom: 10,
     alignSelf: "center",
+    color: "#f0f0f0",
   },
   slider: {
-    width: 200,
+    width: 250,
     height: 40,
     alignSelf: "center",
   },
@@ -448,8 +467,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   button: {
-    marginTop: 16,
+    marginTop: 20,
     alignSelf: "center",
+    backgroundColor: "#333333",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 10,
   },
   hashtagButton: {
     alignSelf: "center",
@@ -457,18 +480,34 @@ const styles = StyleSheet.create({
   },
   spacing: {
     height: 16,
-    backgroundColor: "#f5f5f5",
+    backgroundColor: "#0d0d0d",
   },
   accordion: {
-    backgroundColor: "#e0e0e0 !important",
-    borderRadius: 8,
+    backgroundColor: "#1a1a1a",
+    borderRadius: 10,
     marginVertical: 8,
-    elevation: 2,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: "#2c2c2c",
   },
   addButton: {
     marginTop: 16,
-    paddingLeft: 0,
     alignSelf: "center",
-    marginBottom: 8,
+    backgroundColor: "#2b2b2b",
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  inputListContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+    backgroundColor: "#0d0d0d",
+  },
+  inputList: {
+    width: width * 0.7,
+    marginRight: 8,
+    backgroundColor: "#1e1e1e",
   },
 });
